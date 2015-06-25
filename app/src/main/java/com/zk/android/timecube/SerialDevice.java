@@ -46,15 +46,37 @@ public class SerialDevice implements SdkDevice
     }
 
     /**
-     * Open serial port with specified baudrate and 8N1
-     *
-     *@param baudrate
-     *          serial communication baud rate,generally it should 9600,115200,etc.
+     * Open a serial device with specified port and default 115200@8N1
+     * @param port
+     *        serial port name
      * @throws SdkException Probably may throw SdkException
      */
-    public void open(int baudrate) throws SdkException {
+    public void open(String port) throws SdkException {
         if(mStatus == SdkDeviceStateOpen) return;
-        int ret = SdkNative.native_serial_open(defaultPort,baudrate,8,1,0);
+        int ret = SdkNative.native_serial_open(port, 115200, 8, 1, 0);
+        if(ret<0){
+            throw new SdkException(ret);
+        }
+        mSerialHandle = ret;
+        mStatus = SdkDeviceStateOpen;
+    }
+    /**
+     * Open serial port with specified baudrate,data bits,stop bits,parity
+     *@param port
+     *          serial port name
+     *@param baudrate
+     *          serial communication baud rate,generally it should 9600,115200,etc.
+     * @param databits
+     *            8\7\6\5
+     * @param stopbits
+     *            1\2
+     * @param parity
+     *            0\1\2 0:Parity None 1:Parity Odd 2:Parity Even
+     * @throws SdkException Probably may throw SdkException
+     */
+    public void open(String port,int baudrate,int databits,int stopbits,int parity) throws SdkException {
+        if(mStatus == SdkDeviceStateOpen) return;
+        int ret = SdkNative.native_serial_open(port,baudrate,databits,stopbits,parity);
         if(ret<0){
             throw new SdkException(ret);
         }
@@ -151,7 +173,7 @@ public class SerialDevice implements SdkDevice
         }catch (SdkException e){
             throw new SdkException(e.errorCode());
         }
-        int ret =SdkNative.native_serial_write(mSerialHandle,wbuf,wbuf.length);
+        int ret =SdkNative.native_serial_write(mSerialHandle, wbuf, wbuf.length);
         if(ret<0){
             throw new SdkException(ret);
         }
